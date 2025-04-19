@@ -2,9 +2,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-// Secret key untuk JWT (idealnya simpan di .env)
-const JWT_SECRET = 'your_jwt_secret_key';
-
 // Register new user
 exports.register = async (req, res) => {
   try {
@@ -68,30 +65,35 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    
+
     // Validation
     if (!username || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Username dan password harus diisi!" 
+      return res.status(400).json({
+        success: false,
+        message: "Username dan password harus diisi!"
       });
     }
+
+    console.log("Login attempt:", { username, password });
 
     // Check if user exists
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Username atau password salah!" 
+      console.log("User tidak ditemukan dengan username:", username);
+      return res.status(400).json({
+        success: false,
+        message: "Username atau password salah!"
       });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch);
+
     if (!isMatch) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Username atau password salah!" 
+      return res.status(400).json({
+        success: false,
+        message: "Username atau password salah!"
       });
     }
 
@@ -126,13 +128,15 @@ exports.login = async (req, res) => {
       success: true,
       message: "Login berhasil!",
       user: userData,
-      token // Mengirim token juga dalam response
+      token 
     });
+
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Terjadi kesalahan server." 
+    return res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server.",
+      error: error.message // tambahkan info error
     });
   }
 };
