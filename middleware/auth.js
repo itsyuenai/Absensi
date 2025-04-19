@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 // Secret key untuk JWT (idealnya simpan di .env)
-const JWT_SECRET = 'your_jwt_secret_key';
+const JWT_SECRET = 'rahasiaabsensi123';
 
 // Middleware untuk verifikasi token
 module.exports = function (req, res, next) {
