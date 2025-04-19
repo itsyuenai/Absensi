@@ -13,7 +13,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app',
+  credentials: true
+}));
 app.use(express.static(__dirname)); // <- serve file dari root folder
 app.use(cookieParser());
 
