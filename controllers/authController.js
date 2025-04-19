@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const JWT_SECRET = process.env.JWT_SECRET || 'rahasiaabsensi123'; 
 
 // Register new user
 exports.register = async (req, res) => {
@@ -61,22 +62,19 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user dengan JWT dan cookies
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log("Login attempt:", { username, password });
 
-    // Validation
     if (!username || !password) {
+      console.log("Validation failed: username/password kosong");
       return res.status(400).json({
         success: false,
         message: "Username dan password harus diisi!"
       });
     }
 
-    console.log("Login attempt:", { username, password });
-
-    // Check if user exists
     const user = await User.findOne({ username });
     if (!user) {
       console.log("User tidak ditemukan dengan username:", username);
@@ -86,10 +84,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("Password match:", isMatch);
-
     if (!isMatch) {
       return res.status(400).json({
         success: false,
@@ -97,17 +93,14 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Create token payload
     const payload = {
       userId: user._id,
       username: user.username,
       role: user.role
     };
 
-    // Create JWT token
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 
-    // User data (excluding password)
     const userData = {
       id: user._id,
       name: user.name,
@@ -117,26 +110,25 @@ exports.login = async (req, res) => {
       role: user.role
     };
 
-    // Set cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true in production
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000
     });
+
+    console.log("Login berhasil untuk user:", user.username);
 
     res.json({
       success: true,
       message: "Login berhasil!",
       user: userData,
-      token 
+      token
     });
-
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Terjadi kesalahan server.",
-      error: error.message // tambahkan info error
+      message: "Terjadi kesalahan server."
     });
   }
 };
