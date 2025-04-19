@@ -24,8 +24,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.error("MongoDB Connection Error:", err));
-mongoose.connect('mongodb+srv://<yuenai>:<99990>@cluster0.ihlxpmc.mongodb.net/absensi?retryWrites=true&w=majority');
-
 
 // Routes
 app.use("/api/auth", authRoutes);
