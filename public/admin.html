@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate QR - Absensi QR</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Absensi QR</h3>
+            </div>
+            <div class="user-info" id="user-info">
+                <!-- Will be filled by script -->
+            </div>
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="index.html">Scan QR</a>
+                </li>
+                <li>
+                    <a href="daftar.html">Daftar Absensi</a>
+                </li>
+                <li>
+                    <a href="grafik.html">Statistik</a>
+                </li>
+                <li class="active">
+                    <a href="admin.html">Generate QR</a>
+                </li>
+                <li>
+                    <a href="#" id="logout-btn">Logout</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <div class="container">
+                <h1>Generate QR Code</h1>
+                <p>Buat QR Code untuk sesi absensi</p>
+                
+                <div class="form-container">
+                    <form id="qr-form">
+                        <div class="form-group">
+                            <label for="mata-kuliah">Mata Kuliah</label>
+                            <input type="text" id="mata-kuliah" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="kelas">Kelas</label>
+                            <input type="text" id="kelas" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="durasi">Durasi Aktif (menit)</label>
+                            <input type="number" id="durasi" min="5" max="180" value="60" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Generate QR Code</button>
+                    </form>
+                </div>
+
+                <div id="qr-result" class="qr-result">
+                    <div id="qr-container"></div>
+                    <div class="qr-info">
+                        <p id="qr-info-text"></p>
+                        <button id="download-qr" class="btn-secondary">Download QR</button>
+                        <button id="print-qr" class="btn-secondary">Print QR</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

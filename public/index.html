@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Mahasiswa - QR Scanner</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Absensi QR</h3>
+            </div>
+            <div class="user-info" id="user-info">
+                <!-- Will be filled by script -->
+            </div>
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="index.html">Scan QR</a>
+                </li>
+                <li>
+                    <a href="daftar.html">Daftar Absensi</a>
+                </li>
+                <li>
+                    <a href="grafik.html">Statistik</a>
+                </li>
+                <li id="admin-menu" style="display: none;">
+                    <a href="admin.html">Generate QR</a>
+                </li>
+                <li>
+                    <a href="#" id="logout-btn">Logout</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <div class="container">
+                <h1>Absensi Mahasiswa</h1>
+                <h3>Scan QR Code untuk presensi hari ini</h3>
+                
+                <div class="status-card">
+                    <div id="digital-clock"></div>
+                    <div id="date-display"></div>
+                </div>
+                
+                <div id="scanner-container">
+                    <div id="qr-reader"></div>
+                </div>
+                
+                <div id="result-container">
+                    <p id="scan-result"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/absensi.js"></script>
+</body>
+</html>

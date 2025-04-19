@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Absensi - Absensi QR</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Absensi QR</h3>
+            </div>
+            <div class="user-info" id="user-info">
+                <!-- Will be filled by script -->
+            </div>
+            <ul class="list-unstyled components">
+                <li>
+                    <a href="index.html">Scan QR</a>
+                </li>
+                <li class="active">
+                    <a href="daftar.html">Daftar Absensi</a>
+                </li>
+                <li>
+                    <a href="grafik.html">Statistik</a>
+                </li>
+                <li id="admin-menu" style="display: none;">
+                    <a href="admin.html">Generate QR</a>
+                </li>
+                <li>
+                    <a href="#" id="logout-btn">Logout</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <div class="container">
+                <h1>Daftar Absensi</h1>
+                
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label for="date-start">Tanggal Mulai:</label>
+                            <input type="date" id="date-start">
+                        </div>
+                        <div class="filter-item">
+                            <label for="date-end">Tanggal Akhir:</label>
+                            <input type="date" id="date-end">
+                        </div>
+                        <div class="filter-item">
+                            <label for="status-filter">Status:</label>
+                            <select id="status-filter">
+                                <option value="all">Semua</option>
+                                <option value="hadir">Hadir</option>
+                                <option value="terlambat">Terlambat</option>
+                                <option value="tidak_hadir">Tidak Hadir</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="matkul-filter">Mata Kuliah:</label>
+                            <select id="matkul-filter">
+                                <option value="all">Semua</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <button id="filter-btn" class="btn-primary">Filter</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table" id="absensi-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal</th>
+                                <th>Mata Kuliah</th>
+                                <th>Kelas</th>
+                                <th>Waktu Masuk</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="absensi-data">
+                            <!-- Will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </div>
+                
+                <div class="export-section">
+                    <button id="export-pdf" class="btn-secondary">Export PDF</button>
+                    <button id="export-excel" class="btn-secondary">Export Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
