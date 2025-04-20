@@ -4,186 +4,180 @@ const moment = require('moment-timezone');
 const User = require('../models/user');
 const Absensi = require('../models/absensi');
 const QrCode = require('../models/qrcode');
-const PDFDocument = require('pdfkit'); // Tambahkan untuk PDF export
-const ExcelJS = require('exceljs'); // Tambahkan untuk Excel export
+const PDFDocument = require('pdfkit');
+const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 
-// Generate QR code for attendance
+// Generate QR code (link-based) for attendance
 exports.generateQR = async (req, res) => {
   try {
-    // Generate a unique ID for the QR code
+    const userId = req.user.userId; // Ambil dari token JWT yang login
+
     const qrId = uuidv4();
-    
-    // Set expiry time to 30 minutes from now
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-    
-    // Create QR code in database
+
     const newQrCode = new QrCode({
       qrId,
+      userId,
       status: 'active',
       expiresAt
     });
-    
     await newQrCode.save();
-    
-    // Generate QR code image
-    const qrImage = await qrcode.toDataURL(qrId);
-    
-    res.json({ 
+
+    const baseUrl = 'https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app';
+    const qrUrl = `${baseUrl}/api/absensi/scan-link?user_id=${userId}`;
+    const qrImage = await qrcode.toDataURL(qrUrl);
+
+    res.json({
       success: true,
-      qrId, 
-      qr: qrImage,
+      qrUrl,
+      qrImage,
       expiresAt
     });
   } catch (error) {
-    console.error("Error generating QR code:", error);
-    res.status(500).json({ 
+    console.error("Error generating QR link:", error);
+    res.status(500).json({
       success: false,
-      message: "Gagal membuat QR code" 
+      message: "Gagal membuat QR code link"
     });
   }
 };
 
-// POST /api/absensi/scan
-exports.scanQR = async (req, res) => {
-  const { qrId } = req.body;
-  const userId = req.user.userId; // dari JWT token yang sudah didecode
+// Endpoint untuk scan QR berbasis link (Google Lens friendly)
+exports.scanViaLink = async (req, res) => {
+  const userId = req.query.user_id;
 
-  try {
-    const qrCode = await QrCode.findOne({ qrId, status: 'active' });
-
-    if (!qrCode || qrCode.expiresAt < new Date()) {
-      return res.status(400).json({ success: false, message: "QR tidak valid atau kadaluarsa." });
-    }
-
-    // Tandai absen
-    const newAbsen = new Absensi({
-      user: userId,
-      waktu: new Date(),
-    });
-
-    await newAbsen.save();
-
-    // Set QR jadi tidak aktif (optional)
-    qrCode.status = 'used';
-    await qrCode.save();
-
-    res.json({ success: true, message: "Absensi berhasil." });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Terjadi kesalahan." });
+  if (!userId) {
+    return res.status(400).send("User ID tidak ditemukan di link.");
   }
-};
 
-// Process attendance based on scanned QR code
-exports.processAbsensi = async (req, res) => {
   try {
-    const { qrId } = req.body;
-    const userId = req.user.userId; // Ambil dari JWT token
-    
-    if (!qrId || !userId) {
-      return res.status(400).json({ 
-        success: false,
-        message: "QR code dan user ID diperlukan" 
-      });
-    }
-    
-    // Check if QR code exists and is active
-    const qrCode = await QrCode.findOne({ qrId });
-    
-    if (!qrCode) {
-      return res.status(404).json({ 
-        success: false,
-        message: "QR code tidak valid" 
-      });
-    }
-    
-    if (qrCode.status !== 'active') {
-      return res.status(400).json({ 
-        success: false,
-        message: "QR code sudah digunakan atau kedaluwarsa" 
-      });
-    }
-    
-    // Check if QR code is expired
-    if (new Date() > qrCode.expiresAt) {
-      qrCode.status = 'expired';
-      await qrCode.save();
-      
-      return res.status(400).json({ 
-        success: false,
-        message: "QR code sudah kedaluwarsa" 
-      });
-    }
-    
-    // Get user info
+    const now = moment().tz('Asia/Jakarta');
+    const currentDate = now.format('YYYY-MM-DD');
+    const currentTime = now.format('HH:mm');
+
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: "User tidak ditemukan" 
-      });
+      return res.status(404).send("User tidak ditemukan.");
     }
-    
-    // Check if attendance already exists for this user and QR code
-    const existingAbsensi = await Absensi.findOne({ 
-      userId, 
-      qrId 
-    });
-    
-    if (existingAbsensi) {
-      return res.status(400).json({ 
-        success: false,
-        message: "Anda sudah melakukan absensi hari ini" 
-      });
+
+    const existing = await Absensi.findOne({ userId, tanggal: currentDate });
+    if (existing) {
+      return res.send("Anda sudah absen hari ini.");
     }
-    
-    // Process attendance
-    const now = moment().tz('Asia/Jakarta');
-    const day = now.isoWeekday(); // 1 = Monday, 7 = Sunday
-    
-    // Check if it's a weekday (Monday-Friday)
-    if (day > 5) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Absensi hanya tersedia pada hari Senin-Jumat' 
-      });
-    }
-    
-    const currentTime = now.format('HH:mm');
-    const currentDate = now.format('YYYY-MM-DD');
-    
-    // Define attendance rules
+
     const startTime = moment.tz(currentDate + ' 07:30', 'Asia/Jakarta');
     const graceEndTime = moment.tz(currentDate + ' 07:45', 'Asia/Jakarta');
-    
-    let status = '';
-    
-    // Determine attendance status
+
     if (now.isBefore(startTime)) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Absensi belum dibuka, mulai pukul 07:30 WIB' 
-      });
-    } else if (now.isBetween(startTime, graceEndTime, undefined, '[]')) {
-      status = 'Ontime';
-    } else {
-      const minutesLate = now.diff(graceEndTime, 'minutes');
-      status = `Terlambat ${minutesLate} menit`;
+      return res.send('Absensi belum dibuka, mulai pukul 07:30 WIB');
     }
-    
-    // Create new attendance record
-    const newAbsensi = new Absensi({
+
+    const status = now.isBetween(startTime, graceEndTime, undefined, '[]')
+      ? 'Ontime'
+      : `Terlambat ${now.diff(graceEndTime, 'minutes')} menit`;
+
+    const newAbsen = new Absensi({
       userId: user._id,
       nama: user.name,
       fakultas: user.fakultas,
       tanggal: currentDate,
       jam: currentTime,
-      status: status,
-      qrId: qrId
+      status
+    });
+
+    await newAbsen.save();
+    
+    // Find and update active QR code for this user if exists
+    const qrCode = await QrCode.findOne({ userId, status: 'active' });
+    if (qrCode) {
+      qrCode.status = 'used';
+      await qrCode.save();
+    }
+    
+    return res.send("Absensi berhasil dicatat! Terima kasih.");
+  } catch (err) {
+    console.error("Error scan via link:", err);
+    return res.status(500).send("Terjadi kesalahan saat mencatat absensi.");
+  }
+};
+
+// Process attendance scan
+exports.processAttendance = async (req, res) => {
+  try {
+    const { qrId } = req.body;
+    const userId = req.user.userId; // From JWT token
+    
+    // Validate QR code
+    const qrCode = await QrCode.findOne({ qrId, status: 'active' });
+    if (!qrCode) {
+      return res.status(400).json({
+        success: false,
+        message: "QR Code tidak valid atau sudah digunakan"
+      });
+    }
+    
+    // Check expiration
+    if (new Date() > qrCode.expiresAt) {
+      return res.status(400).json({
+        success: false,
+        message: "QR Code sudah kadaluarsa"
+      });
+    }
+    
+    const now = moment().tz('Asia/Jakarta');
+    const currentDate = now.format('YYYY-MM-DD');
+    const currentTime = now.format('HH:mm');
+    
+    // Check for existing attendance
+    const existing = await Absensi.findOne({ 
+      userId, 
+      tanggal: currentDate 
     });
     
-    await newAbsensi.save();
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Anda sudah absen hari ini"
+      });
+    }
+    
+    // Get user information
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User tidak ditemukan"
+      });
+    }
+    
+    // Check attendance time
+    const startTime = moment.tz(currentDate + ' 07:30', 'Asia/Jakarta');
+    const graceEndTime = moment.tz(currentDate + ' 07:45', 'Asia/Jakarta');
+    
+    if (now.isBefore(startTime)) {
+      return res.status(400).json({
+        success: false,
+        message: "Absensi belum dibuka, mulai pukul 07:30 WIB"
+      });
+    }
+    
+    const status = now.isBetween(startTime, graceEndTime, undefined, '[]')
+      ? 'Ontime'
+      : `Terlambat ${now.diff(graceEndTime, 'minutes')} menit`;
+    
+    // Record attendance
+    const newAbsen = new Absensi({
+      userId: user._id,
+      nama: user.name,
+      fakultas: user.fakultas,
+      tanggal: currentDate,
+      jam: currentTime,
+      status
+    });
+    
+    await newAbsen.save();
     
     // Update QR code status to used
     qrCode.status = 'used';
@@ -604,7 +598,7 @@ exports.exportExcel = async (req, res) => {
   }
 };
 
-// Tambahan: Fungsi untuk mendapatkan ringkasan kehadiran per fakultas
+// Fungsi untuk mendapatkan ringkasan kehadiran per fakultas
 exports.getFakultasStatistics = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -677,7 +671,7 @@ exports.getFakultasStatistics = async (req, res) => {
   }
 };
 
-// Tambahan: Fungsi untuk menghapus data absensi
+// Fungsi untuk menghapus data absensi
 exports.deleteAbsensi = async (req, res) => {
   try {
     const { id } = req.params;
