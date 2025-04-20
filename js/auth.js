@@ -4,7 +4,7 @@
 async function checkAuth() {
     try {
         // Coba dapatkan data user dari server menggunakan cookie
-        const response = await fetch('http://localhost:3000/api/auth/me', {
+        const response = await fetch('http://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/me', {
             method: 'GET',
             credentials: 'include', // Penting untuk mengirim cookies
             headers: {
@@ -85,7 +85,7 @@ function setupLogoutButton() {
             
             try {
                 // Panggil API logout untuk menghapus cookie
-                const response = await fetch('http://localhost:3000/api/auth/logout', {
+                const response = await fetch('http://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/logout', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -117,7 +117,7 @@ function setupLoginForm() {
             const errorMessage = document.getElementById('error-message');
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/login', {
+                const response = await fetch('http://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -157,7 +157,7 @@ function setupRegisterForm() {
             const message = document.getElementById('reg-message');
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/register', {
+                const response = await fetch('http://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -199,7 +199,7 @@ function setupResetPasswordForm() {
             const message = document.getElementById('reset-message');
             
             try {
-                const response = await fetch('http://localhost:3000/api/auth/reset-password', {
+                const response = await fetch('http://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/reset-password', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
