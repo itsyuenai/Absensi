@@ -25,6 +25,7 @@ async function checkAuth() {
         // Jika terautentikasi
         const data = await response.json();
         localStorage.setItem('user', JSON.stringify(data.user));
+        console.log('Login response data:', data);
         
         // Jika di halaman auth tapi sudah login, redirect ke index
         if (window.location.href.includes('login.html') || 
@@ -106,6 +107,7 @@ function setupLogoutButton() {
 }
 
 // Login form handler
+// Login form handler
 function setupLoginForm() {
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
@@ -127,6 +129,7 @@ function setupLoginForm() {
                 });
 
                 const data = await response.json();
+                console.log("Login API response:", data); // <-- Tambahan debug di sini
 
                 if (response.ok) {
                     localStorage.setItem('user', JSON.stringify(data.user));
