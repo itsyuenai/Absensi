@@ -14,10 +14,17 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(cors({
+<<<<<<< HEAD
   origin: 'http://localhost:5500', // Update this to your frontend local port (e.g., live server)
   credentials: true
 }));
 app.use(express.static(__dirname)); // <- serve files from root folder
+=======
+  origin: 'https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app',
+  credentials: true
+}));
+app.use(express.static(__dirname)); // <- serve file dari root folder
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
 app.use(cookieParser());
 
 // MongoDB Connection

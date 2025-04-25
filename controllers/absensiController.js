@@ -21,7 +21,11 @@ exports.generateQR = async (req, res) => {
     const newQrCode = new QrCode({ qrId, userId, status: 'active', expiresAt });
     await newQrCode.save();
 
+<<<<<<< HEAD
     const baseUrl = 'http://localhost:3000';
+=======
+    const baseUrl = 'https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app';
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
     const qrUrl = `${baseUrl}/api/absensi/scan-link?user_id=${userId}`;
     const qrBuffer = await qrcode.toBuffer(qrUrl);
 
@@ -204,6 +208,40 @@ exports.exportAbsensiPDF = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Failed to export PDF' });
+<<<<<<< HEAD
+  }
+};
+
+exports.exportAbsensiExcel = async (req, res) => {
+  try {
+    const { bulan, fakultas } = req.query;
+    let query = {};
+    if (bulan) query.tanggal = { $regex: `^${bulan}` };
+    if (fakultas) query.fakultas = fakultas;
+
+    const absensi = await Absensi.find(query);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Absensi');
+
+    worksheet.columns = [
+      { header: 'Nama', key: 'nama' },
+      { header: 'Fakultas', key: 'fakultas' },
+      { header: 'Tanggal', key: 'tanggal' },
+      { header: 'Jam', key: 'jam' },
+      { header: 'Status', key: 'status' }
+    ];
+
+    absensi.forEach(absen => worksheet.addRow(absen));
+
+    const filePath = path.join(__dirname, '../exports/absensi.xlsx');
+    await workbook.xlsx.writeFile(filePath);
+
+    res.download(filePath);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to export Excel' });
+=======
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
   }
 };
 

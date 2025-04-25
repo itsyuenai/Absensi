@@ -4,7 +4,11 @@
 async function checkAuth() {
     try {
         // Get user data from server using cookie
+<<<<<<< HEAD
         const response = await fetch('http://localhost:3000/api/auth/me', {
+=======
+        const response = await fetch('https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/me', {
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
             method: 'GET',
             credentials: 'include', // Important to send cookies
             headers: {
@@ -153,7 +157,11 @@ function setupRegisterForm() {
             try {
                 messageElement.textContent = 'Membuat akun...';
                 
+<<<<<<< HEAD
                 const response = await fetch('http://localhost:3000/api/auth/register', {
+=======
+                const response = await fetch('https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/register', {
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -249,7 +257,11 @@ function setupLogoutButton() {
             
             try {
                 // Call logout API to remove cookie
+<<<<<<< HEAD
                 const response = await fetch('http://localhost:3000/api/auth/logout', {
+=======
+                const response = await fetch('https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/logout', {
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
                     method: 'POST',
                     credentials: 'include',
                     headers: {
@@ -293,7 +305,11 @@ function setupLoginForm() {
             try {
                 errorMessage.textContent = 'Logging in...'; // Feedback during login process
                 
+<<<<<<< HEAD
                 const response = await fetch('http://localhost:3000/api/auth/login', {
+=======
+                const response = await fetch('https://inclined-ddene-itsyuenai-ccb1f6ab.koyeb.app/api/auth/login', {
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -335,4 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // For register and reset forms, keep the original implementations
     if (typeof setupRegisterForm === 'function') setupRegisterForm();
     if (typeof setupResetPasswordForm === 'function') setupResetPasswordForm();
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> b84f276c4b90897806c547dbc086dafdce58ff56
