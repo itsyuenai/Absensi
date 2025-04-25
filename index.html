@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Absensi Mahasiswa - QR Scanner</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <!-- Memastikan library HTML5-QRCode dimuat dengan benar -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -46,19 +47,205 @@
                     <div id="digital-clock"></div>
                     <div id="date-display"></div>
                 </div>
+                <img src="/api/absensi/generate-qr" alt="QR Code Absensi">
+                    <p id="qr-expiry" style="margin-top: 10px; font-size: 14px;"></p>
+                </div>           
                 
-                <div id="scanner-container">
-                    <div id="qr-reader"></div>
+                <!-- Tambahkan status koneksi dan tombol retry -->
+                <div id="connection-status" style="margin-top: 20px; text-align: center;">
+                    <span id="status-indicator"></span>
                 </div>
-                
-                <div id="result-container">
-                    <p id="scan-result"></p>
+                <div id="retry-container" style="text-align: center; margin-top: 10px; display: none;">
+                    <button id="retry-button" class="btn btn-primary">Coba Lagi</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Skrip untuk autentikasi -->
     <script src="js/auth.js"></script>
+    <!-- Skrip untuk absensi dan QR scanner -->
     <script src="js/absensi.js"></script>
+    
+    <!-- Tambahkan skrip untuk mendeteksi library QR code yang tidak dimuat -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tampilkan loading indicator
+            document.getElementById('loading-indicator').style.display = 'block';
+            
+            // Periksa role user dari localStorage
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user && user.role === 'admin') {
+                document.getElementById('admin-menu').style.display = 'block';
+                document.getElementById('dynamic-qr-container').style.display = 'block';
+                generateQRCode();
+            } 
+            
+            // Fungsi untuk generate QR Code
+            function generateQRCode() {
+                const expiryTime = new Date();
+                expiryTime.setMinutes(expiryTime.getMinutes() + 30); // 30 menit kedepan
+                
+                const qrData = {
+                    type: 'attendance',
+                    mataKuliah: 'Nama Mata Kuliah', // Ganti dengan data sebenarnya
+                    kelas: 'Kelas', // Ganti dengan data sebenarnya
+                    expiryTime: expiryTime.toISOString()
+                };
+                
+                // Generate QR Code menggunakan library yang sudah ada
+                const qrcodeElement = document.getElementById('qrcode');
+                qrcodeElement.innerHTML = ''; // Bersihkan dulu
+                
+                QRCode.toCanvas(qrcodeElement, JSON.stringify(qrData), {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error("Gagal generate QR:", error);
+                        document.getElementById('qr-expiry').textContent = 'Gagal generate QR Code';
+                    } else {
+                        document.getElementById('qr-expiry').textContent = 
+                            `Berlaku sampai: ${expiryTime.toLocaleTimeString('id-ID')}`;
+                    }
+                });
+            }
+
+            function fetchQR() {
+            fetch('/api/absensi/generate-qr', {
+                headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(res => res.blob()) // kalau backend kirim langsung image/png
+            .then(blob => {
+                const qrUrl = URL.createObjectURL(blob);
+                document.getElementById('qr-image').src = qrUrl;
+
+                const now = new Date();
+                document.getElementById('qr-expiry').textContent = `Dibuat: ${now.toLocaleTimeString()}`;
+            })
+            .catch(err => {
+                console.error('QR error:', err);
+            });
+            }
+
+            // Fetch pertama saat load
+            fetchQR();
+
+            // Refresh QR tiap 1 menit
+            setInterval(fetchQR, 60000);
+
+
+            // Fungsi untuk initialize QR Scanner
+            function initializeQRScanner() {
+                if (typeof Html5Qrcode === 'undefined') {
+                    document.getElementById('scan-result').innerHTML = '<span style="color: red">QR scanner library not loaded!</span>';
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    document.getElementById('retry-container').style.display = 'block';
+                    document.getElementById('status-indicator').innerHTML = '<span style="color: red">Gagal memuat library QR scanner</span>';
+                    return;
+                }
+                
+                const html5QrCode = new Html5Qrcode("qr-reader");
+                const config = { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 } 
+                };
+                
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        // Handle hasil scan
+                        try {
+                            const qrData = JSON.parse(decodedText);
+                            document.getElementById('scan-result').innerHTML = 
+                                `<span style="color: green">Berhasil scan: ${qrData.mataKuliah}</span>`;
+                        } catch (e) {
+                            document.getElementById('scan-result').innerHTML = 
+                                '<span style="color: red">QR Code tidak valid!</span>';
+                        }
+                    },
+                    (errorMessage) => {
+                        // Handle error secara silent
+                    }
+                ).then(() => {
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    document.getElementById('status-indicator').innerHTML = 
+                        '<span style="color: green">Siap memindai</span>';
+                }).catch(err => {
+                    document.getElementById('scan-result').innerHTML = 
+                        `<span style="color: red">Gagal mengaktifkan kamera: ${err}</span>`;
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    document.getElementById('retry-container').style.display = 'block';
+                });
+            }
+            
+            // Tambahkan event listener untuk tombol retry
+            document.getElementById('retry-button').addEventListener('click', function() {
+                location.reload();
+            });
+        });
+    </script>
+    
+    <!-- Tambahkan styling untuk loading indicator -->
+    <style>
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #qr-reader {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        #qr-reader button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #result-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            min-height: 60px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0069d9;
+        }
+    </style>
 </body>
 </html>
