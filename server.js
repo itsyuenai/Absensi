@@ -13,12 +13,15 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-app.use(express.static(__dirname)); // <- serve file dari root folder
+app.use(cors({
+  origin: 'http://localhost:5500', // Update this to your frontend local port (e.g., live server)
+  credentials: true
+}));
+app.use(express.static(__dirname)); // <- serve files from root folder
 app.use(cookieParser());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/absensi_app', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
@@ -34,4 +37,4 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT} - Access at http://localhost:${PORT}`));

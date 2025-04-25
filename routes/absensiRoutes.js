@@ -1,20 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const absensiController = require('../controllers/absensiController');
+const { authMiddleware } = require('../middleware/authMiddleware');
+console.log("authMiddleware typeof:", typeof authMiddleware);
+console.log("authMiddleware:", authMiddleware);
 
-// Generate QR code for attendance
+// Semua API protected
+router.use(authMiddleware);
+
+// QR Code
 router.get('/generate-qr', absensiController.generateQR);
 
-// Process attendance
-router.post('/process', absensiController.processAbsensi);
+// Scan Link
+router.get('/scan-link', absensiController.scanViaLink);
 
-// Get attendance statistics
-router.get('/statistics', absensiController.getStatistics);
+// Process Scan
+router.post('/process', absensiController.processAttendance);
 
-// Get all attendance records
+// Absensi List
 router.get('/list', absensiController.getAllAbsensi);
 
-// Get user's attendance records
+// User Absensi
 router.get('/user/:userId', absensiController.getUserAbsensi);
+
+// Export ke PDF
+router.get('/export-pdf', absensiController.exportAbsensiPDF);
+
+// Export ke Excel
+router.get('/export-excel', absensiController.exportAbsensiExcel);
+
+// Statistik route
+router.get('/statistics', absensiController.getStatistics);
 
 module.exports = router;
